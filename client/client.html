@@ -1,13 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <title>Our simple HTTP server</title>
+  <title>HTTP server</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
-  
+
   <script>
 
+    const handleResponse = (response) => {
+      response.text().then((text) => {
+
+        console.log(text);
+
+        let content = response.headers.get('Content-Type');
+ 
+
+        switch (content) {
+          case 'text/xml':
+            response = new window.DOMParser().parseFromString(text, 'text/xml');
+            document.getElementById("message").textContent = `Message: ${response.querySelector('message').textContent}`;
+            break;
+          default:
+            response = JSON.parse(text);
+            document.getElementById("message").textContent = `Message: ${response.message}`;
+        }
+      });
+    };
+
+    const sendFetchRequest = (url, acceptedType) => {
+      const options = {
+        method: 'GET',
+        headers: {
+          'Accept': acceptedType
+        },
+      };
+      let fetchPromise = fetch(url, options);
+      fetchPromise.then((response) => {
+        handleResponse(response);
+      });
+
+    };
+
+    const init = () => {
+
+      let response = "";
+      const typeDropdown = document.getElementById("type");
+      const sendButton = document.getElementById('send');
+      const pageDropdown = document.getElementById("page");
+
+
+      sendButton.addEventListener('click', () => sendFetchRequest(pageDropdown.value, typeDropdown.value));
+    };
+
+    window.onload = init;
   </script>
 </head>
+
 <body>
   <section id="top">
     <h3>Status Code Tests</h3>
@@ -27,6 +75,8 @@
     <button id="send">Send</button>
   </section>
   <section id="content">
+    <h1 id="message"></h1>
   </section>
 </body>
+
 </html>
